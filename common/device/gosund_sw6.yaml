@@ -1,0 +1,113 @@
+<<: !include ../common.yaml
+# GPIO00 Button1
+# GPIO02 Led1i
+# GPIO04 Switch1
+# GPIO14 Relay2
+# GPIO15 Relat1
+# GPIO16 LedLinki
+esphome:
+  name: ${name}
+  platform: ESP8266
+  board: esp8285
+
+logger:
+  level: VERY_VERBOSE
+
+debug:
+
+sensor:
+  - <<: !include ../sensor/uptime.config.yaml
+  - <<: !include ../sensor/wifi_signal.config.yaml
+
+status_led:
+  pin:
+    number: GPIO2
+    inverted: true
+
+output:
+  # Relay state led
+  - platform: esp8266_pwm
+    id: state_led
+    pin:
+      number: GPIO16 # Was GPIO2
+
+light:
+  # Relay state light
+  - platform: monochromatic
+    output: state_led
+    id: led
+
+binary_sensor:
+  - <<: !include ../binary_sensor/connection_status.config.yaml
+
+  - platform: gpio
+    pin:
+      number: GPIO00
+      mode: INPUT_PULLUP
+      inverted: true
+    id: button
+    on_press:
+      then:
+      - switch.toggle: relay
+    on_multi_click:
+    - timing:
+        - OFF for at least 10s
+      then:
+        - switch.turn_on: restart_switch
+
+  - platform: gpio
+    pin:
+      number: GPIO15
+      mode: INPUT_PULLDOWN_16
+    id: dummy_relay
+    internal: True
+
+  - platform: gpio
+    pin:
+      number: GPIO4
+      mode: INPUT_PULLUP
+      inverted: True
+    id: power_button
+    name: "Dumb Switch Output"
+    internal: True
+    on_press:
+      - switch.toggle: ${name}
+    on_state:
+      lambda: !lambda |-
+        if (x) {
+          id(state_led).turn_on();
+        } else {
+          id(state_led).turn_off();
+        }
+
+switch:
+  - <<: !include ../switch/restart.config.yaml
+
+  - platform: gpio
+    pin: GPIO14
+    id: relay
+    restore_mode: RESTORE_DEFAULT_OFF
+    internal: True
+  
+  - platform: template
+    name: ${friendly_name}
+    id: ${name}
+    icon: ${icon}
+    lambda: |-
+      if (id(power_button).state) {
+        return true;
+      } else {
+        return false;
+      }
+    turn_on_action:
+    - if:
+        condition:
+          - binary_sensor.is_off: power_button
+        then:
+          - switch.toggle: relay
+    turn_off_action:
+    - if:
+        condition:
+          - binary_sensor.is_on: power_button
+        then:
+          - switch.toggle: relay
