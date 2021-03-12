@@ -1,0 +1,3 @@
+platform: uptime
+name: ${name} Uptime
+update_interval: ${update_interval}

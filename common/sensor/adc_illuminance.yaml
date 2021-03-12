@@ -1,0 +1,7 @@
+platform: adc
+pin: A0
+name: "${friendly_name} Illuminance"
+unit_of_measurement: lux
+filters:
+  - lambda: return (x * 3.3 / 10000.0) * 2000000.0;
+  #- lambda: return (100 - ((x - 25) * 100 / (800 - 25)));

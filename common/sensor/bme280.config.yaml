@@ -1,0 +1,16 @@
+---
+platform: bme280
+temperature:
+  name: "${friendly_name} Temperature"
+  id: bme280_temperature
+  oversampling: 16x
+pressure:
+  name: "${friendly_name} Pressure"
+  id: bme280_pressure
+  oversampling: 1x
+humidity:
+  name: "${friendly_name} Humidity"
+  id: bme280_humidity
+  oversampling: 1x
+address: 0x76
+update_interval: 60s
