@@ -1,0 +1,12 @@
+<<: !include common/common.yaml
+
+substitutions:
+  name: unit2_socket_bedroom
+  friendly_name: Unit2 Socket Bedroom
+  icon: "mdi:chart-multiline"
+  update_interval: 5min
+  ip: 192.168.30.98
+
+logger:
+
+<<: !include common/device/tgwf115pqm_smart_plug.yaml

@@ -1,0 +1,12 @@
+<<: !include common/common.yaml
+
+substitutions:
+  name: unit2_socket_livingroom_fireplace
+  friendly_name: Unit2 Socket Livingroom Fireplace
+  icon: "mdi:chart-multiline"
+  update_interval: 5min
+  ip: 192.168.30.28
+    
+logger:
+
+<<: !include common/device/tgwf115pqm_smart_plug.yaml

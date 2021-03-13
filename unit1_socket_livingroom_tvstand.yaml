@@ -1,0 +1,12 @@
+<<: !include common/common.yaml
+
+substitutions:
+  name: unit1_socket_livingroom_tvstand
+  friendly_name: Unit1 Livingroom TV Stand
+  icon: "mdi:chart-multiline"
+  update_interval: 5min
+  ip: 192.168.30.29
+
+logger:
+
+<<: !include common/device/tgwf115pqm_smart_plug.yaml
