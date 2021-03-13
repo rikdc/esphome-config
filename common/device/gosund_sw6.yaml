@@ -10,11 +10,6 @@ esphome:
   platform: ESP8266
   board: esp8285
 
-logger:
-  level: VERY_VERBOSE
-
-debug:
-
 sensor:
   - <<: !include ../sensor/uptime.config.yaml
   - <<: !include ../sensor/wifi_signal.config.yaml

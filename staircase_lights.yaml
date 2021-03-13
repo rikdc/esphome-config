@@ -1,0 +1,10 @@
+<<: !include common/common.yaml
+
+substitutions:
+  name: staircase_lights
+  friendly_name: Staircase Lights
+  icon: "mdi:chart-multiline"
+  update_interval: 5min
+  ip: 192.168.30.21
+    
+<<: !include common/device/gosund_sw6.yaml
