@@ -1,0 +1,42 @@
+<<: !include common/common.yaml
+
+substitutions:
+  name: unit1_bedroom
+  friendly_name: Unit 1 Bedroom
+  icon: "mdi:chart-multiline"
+  update_interval: 5min
+  # manual_ip:
+  ip: 192.168.30.25
+  #gateway: 192.168.30.1
+  #subnet: 255.255.255.0
+
+esphome:
+  name: $name
+  platform: ESP8266
+  board: nodemcuv2
+
+i2c:
+  sda: GPIO4
+  scl: GPIO5
+
+logger:
+
+sensor:
+  - <<: !include common/sensor/uptime.config.yaml
+  - <<: !include common/sensor/wifi_signal.config.yaml
+  - <<: !include common/sensor/bme280.config.yaml
+  
+binary_sensor:
+  - platform: status
+    name: "${friendly_name} Status"
+    id: rclw_input_sensor
+
+  - platform: gpio
+    pin: D7
+    name: "${friendly_name} Motion"
+    device_class: motion
+    filters:
+      - delayed_off: 5s
+      
+switch:
+  - <<: !include common/switch/restart.config.yaml
