@@ -1,0 +1,34 @@
+<<: !include common/common.yaml
+
+substitutions:
+  name: multisensor_unit1_mudroom
+  friendly_name: Unit 1 Mudroom
+  update_interval: 1min
+  ip: 192.168.30.30
+
+esphome:
+  name: $name
+  platform: ESP8266
+  board: nodemcuv2
+
+i2c:
+  sda: GPIO4
+  scl: GPIO5
+
+# Enable logging
+logger:
+
+sensor:
+  -  !include common/sensor/uptime.config.yaml
+  -  !include common/sensor/wifi_signal.config.yaml
+  -  !include common/sensor/adc_illuminance.yaml
+  -  !include common/sensor/bme280.config.yaml
+  -  !include common/sensor/dewpoint.yaml
+  
+binary_sensor:
+  -  !include common/binary_sensor/connection_status.config.yaml
+
+  - platform: gpio
+    pin: D7
+    name: "${friendly_name} Motion"
+    device_class: motion
