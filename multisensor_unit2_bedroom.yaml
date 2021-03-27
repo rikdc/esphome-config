@@ -1,0 +1,67 @@
+<<: !include common/common.yaml
+
+substitutions:
+  name: unit2_multisensor_bedroom
+  friendly_name: Unit 2 Multisensor Bedroom
+  update_interval: 5min
+  ip: 192.168.30.26
+
+esphome:
+  name: $name
+  platform: ESP8266
+  board: nodemcuv2
+  # on_boot:
+  #   - lambda: |-
+  #       id(my_ota).set_auth_password("lemonface");
+
+i2c:
+  sda: D2
+  scl: D1
+
+# Enable logging
+logger:
+
+globals:
+  - id: option_disable_motion
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+# status_led:
+#   pin: GPIO13
+
+switch:
+  - platform: gpio
+    pin: D3
+    id: activity_indicator
+
+  # - platform: template
+  #   id: switch_option_disable_motion
+  #   name: "${device_verbose_name} Disable Motion Indictor"
+  #   on_...:
+  #     - globals.set:
+  #         id: my_global_var
+  #         value: '10'
+
+sensor:
+  - platform: bh1750
+    name: "${friendly_name} Illuminance"
+    address: 0x23
+    measurement_time: 69
+    update_interval: 60s
+
+  -  !include common/sensor/uptime.config.yaml
+  -  !include common/sensor/wifi_signal.config.yaml
+  -  !include common/sensor/bme280.config.yaml
+  -  !include common/sensor/dewpoint.yaml
+
+binary_sensor:
+  - platform: gpio
+    pin: D6
+    name: "${friendly_name} Motion"
+    device_class: motion
+
+  - platform: gpio
+    pin: D5
+    name: "${friendly_name} Motion 2"
+    device_class: motion

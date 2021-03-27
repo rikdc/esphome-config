@@ -1,0 +1,46 @@
+---
+<<: !include common/common.yaml
+
+substitutions:
+  name: multisensor_unit2_office
+  friendly_name: Upper Office Multisensor
+  update_interval: 1min
+
+esphome:
+  name: $name
+  platform: ESP8266
+  board: nodemcuv2
+
+i2c:
+  sda: GPIO4
+  scl: GPIO5
+
+logger:
+
+switch:
+  - platform: gpio
+    internal: true
+    pin:
+      number: D6
+      mode: OUTPUT
+    id: activity_indicator
+
+sensor:
+  -  !include common/sensor/uptime.config.yaml
+  -  !include common/sensor/wifi_signal.config.yaml
+  -  !include common/sensor/adc_illuminance.yaml
+  -  !include common/sensor/rcwl0516.yaml
+  -  !include common/sensor/bme280.config.yaml
+  -  !include common/sensor/dewpoint.yaml
+  
+binary_sensor:
+  -  !include common/binary_sensor/connection_status.config.yaml
+
+#   - platform: status
+#     name: "${device_verbose_name} Status"
+#     id: rclw_input_sensor
+
+  - platform: gpio
+    pin: D7
+    name: "${friendly_name} Motion"
+    device_class: motion
