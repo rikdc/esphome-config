@@ -1,0 +1,25 @@
+<<: !include common/common.yaml
+
+substitutions:
+  node_name: basement
+  name: basement
+  device_verbose_name: Basement
+
+esphome:
+  name: $node_name
+  platform: ESP32
+  board: esp-wrover-kit
+
+i2c:
+  sda: 21
+  scl: 22
+  scan: True
+  id: bus_a
+
+# Enable logging
+logger:
+
+sensor:
+  -  !include common/sensor/adc_illuminance.yaml
+  -  !include common/sensor/bme280.config.yaml
+  -  !include common/sensor/dewpoint.yaml

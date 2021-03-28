@@ -1,2 +1,2 @@
 platform: status
-name: "${name} Status"
+name: "${friendly_name} Status"

@@ -1,0 +1,6 @@
+---
+platform: gpio
+pin: D7
+id: night_light_motion
+name: "${friendly_name} Motion"
+device_class: motion
