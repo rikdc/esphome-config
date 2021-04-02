@@ -1,0 +1,180 @@
+#
+# monitor_volatile_organic_compounds
+# sensor.monitor_pm2_5
+#
+#
+<<: !include common/common.yaml
+
+substitutions:
+  friendly_name: AirQ Upstairs
+  update_interval: 1min
+
+esphome:
+  name: esp_airq
+  platform: ESP32
+  board: featheresp32
+  includes:
+    - common/sharp_sensor.h
+
+color:
+  - id: my_red
+    red: 100%
+    green: 0%
+    blue: 0%
+  - id: my_yellow
+    red: 100%
+    green: 100%
+    blue: 0%
+  - id: my_green
+    red: 0%
+    green: 100%
+    blue: 0%
+  - id: my_blue
+    red: 0%
+    green: 0%
+    blue: 100%
+  - id: my_gray
+    red: 50%
+    green: 50%
+    blue: 50%
+
+font:
+  - file: "Helvetica.ttf"
+    id: helvetica_48
+    size: 48
+  - file: "Helvetica.ttf"
+    id: helvetica_24
+    size: 24
+  - file: "Helvetica.ttf"
+    id: helvetica_12
+    size: 12
+
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO19
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  
+sensor:
+  - platform: ccs811
+    eco2:
+      name: "CCS811 eCO2 Value"
+      id: ec02_value
+    tvoc:
+      name: "CCS811 Total Volatile Organic Compound"
+      id: tvoc_value
+    address: 0x5A
+    update_interval: 60s
+    temperature: bme280_temperature
+    humidity: bme280_humidity
+    baseline: 0x2CC6
+
+  - platform: bh1750
+    name: "Illuminance"
+    address: 0x23
+    measurement_time: 69
+    update_interval: 60s
+    
+  - platform: custom
+    lambda: |-
+      auto dust_Sensor = new My_dust_Sensor(); 
+      App.register_component(dust_Sensor);
+      return {dust_Sensor->dust_alt_density_sensor, dust_Sensor->dust_density_sensor};
+
+    sensors:
+      - name: "Particulate Matter <2.5µm Concentration"
+        accuracy_decimals: 2
+        unit_of_measurement: "µg/m³"
+        filters:
+          - sliding_window_moving_average:
+              window_size: 15
+              send_every: 15
+
+      - name: "0.5 Micron Particles per 0.01 cubic feet"
+        id: monitor_pm2_5
+        accuracy_decimals: 2
+        unit_of_measurement: "PPM"
+        filters:
+          - sliding_window_moving_average:
+              window_size: 15
+              send_every: 15
+
+# 3000 + = Very Bad
+# 1050-3000 = Bad
+# 300-1050 = Ordinary
+# 150-300 = Good
+# 75-150 = Very Good
+# 0-75 = Tiptop
+# "unit_of_measurement" must be set, otherwise HA will show history like a "binary sensor", not line graph
+# captive_portal:
+
+  - <<: !include common/sensor/bme280.config.yaml
+
+binary_sensor:
+  - platform: status
+    name: "Node Status"
+    id: system_status
+  - platform: gpio
+    pin:
+      number: GPIO0
+      inverted: true
+      mode: INPUT_PULLUP
+    name: "T-Display Button Input 0"
+    id: tdisplay_button_input_0
+  - platform: gpio
+    pin:
+      number: GPIO35
+      inverted: true
+    name: "T-Display Button Input 1"
+    id: tdisplay_button_input_1
+
+# We can still control the backlight independently
+switch:
+  - platform: gpio
+    pin: GPIO4
+    name: "Backlight"
+    id: backlight
+
+time:
+  - platform: homeassistant
+    id: esptime
+
+#
+# eCO2 measurement range: 400-29206 ppm
+# TVOC measurement range: 0 to 32768ppb
+#
+
+display:
+  - platform: st7789v
+    backlight_pin: GPIO4
+    cs_pin: GPIO5
+    dc_pin: GPIO16
+    reset_pin: GPIO23
+    rotation: 270
+    lambda: |-
+      it.rectangle(0,  0, it.get_width(), it.get_height(), id(my_blue));
+      it.rectangle(0, 20, it.get_width(), it.get_height(), id(my_blue));   // header bar
+
+      it.strftime((240 / 2), (140 / 3) * 1 + 5, id(helvetica_24), id(my_gray), TextAlign::CENTER, "%Y-%m-%d", id(esptime).now());
+      it.print(5, 5, id(helvetica_12), id(my_yellow), TextAlign::TOP_LEFT, "AirQ");
+
+      if (id(system_status).state) {
+        it.print(235, 5, id(helvetica_12), id(my_green), TextAlign::TOP_RIGHT, "Online");
+      }
+      else {
+        it.print(235, 5, id(helvetica_12), id(my_red), TextAlign::TOP_RIGHT, "Offline");
+      }
+
+      // Print PPM Value in the bottom
+      if (id(ec02_value).state < 750) {
+      	it.printf((240 / 2), (135 / 3) * 2 + 5, id(helvetica_48), id(my_green), TextAlign::CENTER, "%.0f ppm", id(ec02_value).state);
+      } 
+      else  
+        if (id(ec02_value).state < 1000) {
+          it.printf((240 / 2), (135 / 3) * 2 + 5, id(helvetica_48), id(my_yellow), TextAlign::CENTER, "%.0f ppm",id(ec02_value).state);
+        } 
+        else { 
+          it.printf((240 / 2), (135 / 3) * 2 + 5, id(helvetica_48), id(my_red), TextAlign::CENTER, "%.0f ppm", id(ec02_value).state);
+        }
