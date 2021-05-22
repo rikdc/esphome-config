@@ -1,0 +1,9 @@
+---
+# The sensor starts in an uncalibrated state after boot
+esphome:
+  on_boot:
+    priority: 500
+    then:
+      - binary_sensor.template.publish:
+          id: co2_calibrated
+          state: OFF
