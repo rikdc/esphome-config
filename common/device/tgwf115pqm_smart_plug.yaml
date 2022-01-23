@@ -52,6 +52,8 @@ sensor:
             - 128.88396 -> 119.8
             - 128.96568 -> 119.8
             - 129.04739 -> 119.9
+    energy:
+      name: "${friendly_name} Energy"
     update_interval: 10s
 
 status_led:
