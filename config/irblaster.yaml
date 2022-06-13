@@ -1,0 +1,30 @@
+<<: !include common/common.yaml
+
+substitutions:
+  name: unit1_irblaster
+  friendly_name: IR Blaster
+  update_interval: 5min
+  ip: 192.168.30.34
+  
+esphome:
+  name: $name
+  platform: esp32
+  board: node32s
+
+# Enable logging
+logger:
+
+sensor:
+  -  !include common/sensor/uptime.config.yaml
+  -  !include common/sensor/wifi_signal.config.yaml
+
+binary_sensor:
+  - <<: !include common/binary_sensor/connection_status.config.yaml
+
+remote_transmitter:
+  pin: GPIO17
+  carrier_duty_percent: 50%
+
+climate:
+  - platform: mitsubishi
+    name: "${friendly_name} AC"

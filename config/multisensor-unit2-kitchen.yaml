@@ -1,0 +1,43 @@
+<<: !include common/common.yaml
+
+substitutions:
+  name: multisensor-unit2-kitchen
+  friendly_name: Unit 2 Kitchen
+  update_interval: 5min
+  ip: 192.168.30.47
+  
+esphome:
+  name: $name
+  platform: esp32
+  board: node32s
+
+i2c:
+  sda: GPIO33
+  scl: GPIO32
+
+# Enable logging
+logger:
+
+sensor:
+  -  !include common/sensor/uptime.config.yaml
+  -  !include common/sensor/wifi_signal.config.yaml
+  -  !include common/sensor/adc_illuminance.yaml
+  -  !include common/sensor/bme280.config.yaml
+  -  !include common/sensor/dewpoint.yaml
+
+binary_sensor:
+  - <<: !include common/binary_sensor/connection_status.config.yaml
+
+  - platform: gpio
+    pin: GPIO19
+    name: "${friendly_name} Motion"
+    device_class: motion
+
+remote_transmitter:
+  pin: GPIO3
+  carrier_duty_percent: 50%
+
+climate:
+  - platform: fujitsu_general
+    #sensor: "${name}_temperature"
+    name: "${friendly_name} AC"

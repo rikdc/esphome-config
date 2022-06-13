@@ -1,0 +1,85 @@
+substitutions:
+  node_name: camera_growroom
+  device_verbose_name: Growroom Camera
+
+esphome:
+  name: $node_name
+  platform: esp32
+  board: esp32dev
+  platformio_options:
+    upload_speed: 460800
+
+wifi:
+  ssid: "SealoonNoT"
+  password: "gunnerSludge771%"
+  fast_connect: true
+  # power_save_mode: high # Without this, the devices seem to get rather warm.
+
+  manual_ip:
+    static_ip: 192.168.30.27
+    gateway: 192.168.30.1
+    subnet: 255.255.255.0
+
+# Enable logging
+logger:
+  level: debug
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+# # Example configuration entry
+esp32_camera:
+  external_clock:
+    pin: GPIO0
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO26
+    scl: GPIO27
+  data_pins: [GPIO5, GPIO18, GPIO19, GPIO21, GPIO36, GPIO39, GPIO34, GPIO35]
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+  power_down_pin: GPIO32
+  horizontal_mirror: false
+  brightness: 1
+
+  # Image settings
+  name: My Camera
+#   # ...
+
+
+# deep_sleep:
+#   wakeup_pin: GPIO13
+#   run_duration: 30s
+#   id: deep_sleep_1
+
+# binary_sensor:
+#   - platform: gpio
+#     pin: GPIO13
+#     id: motion_camera_motion
+#     name: "PIR Sensor"
+#     device_class: motion
+#     on_state:
+#       if:
+#         condition:
+#           # Same syntax for is_off
+#           binary_sensor.is_off: motion_camera_motion
+#         then:
+#           - deep_sleep.enter: deep_sleep_1
+
+switch:
+  - platform: gpio
+    pin: GPIO32
+    id: power_down
+
+output:
+  - platform: gpio
+    pin: GPIO4
+    id: gpio_4
+
+light:
+  - platform: binary
+    output: gpio_4
+    name: "ESP32 Camera light"

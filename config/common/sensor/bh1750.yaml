@@ -1,0 +1,6 @@
+---
+platform: bh1750
+name: "${friendly_name} Illuminance"
+unit_of_measurement: lx
+address: 0x23
+update_interval: 60s

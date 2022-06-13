@@ -1,0 +1,42 @@
+<<: !include common/common.yaml
+
+substitutions:
+  name: growbot
+  friendly_name: Growbot1
+  device_verbose_name: Growbot Controller
+  ip: 192.168.30.8
+
+esphome:
+  name: $name
+  platform: ESP32
+  board: nodemcu-32s
+
+i2c:
+  sda: 23
+  scl: 22
+  scan: True
+
+logger:
+  level: debug
+
+dallas:
+  - pin: 25
+
+# Individual sensors
+sensor:
+  - platform: dallas
+    address: 0xD801192EFC5B2928
+    name: "Soil Temperature"
+    
+  - platform: dht
+    pin: 21
+    temperature:
+      name: "Air Temperature"
+    humidity:
+      name: "Humidity"
+    update_interval: 60s
+    
+  -  !include common/sensor/bh1750.yaml
+  
+switch:
+   -  !include common/switch/restart.config.yaml

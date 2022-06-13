@@ -1,0 +1,109 @@
+<<: !include common/common.yaml
+
+substitutions:
+  name: multisensor-unit1-bedroom
+  friendly_name: Unit 1 Bedroom
+  icon: "mdi:chart-multiline"
+  update_interval: 5min
+
+esphome:
+  name: $name
+  platform: ESP8266
+  board: nodemcuv2
+
+i2c:
+  scl: D2
+  sda: D3
+
+logger:
+
+status_led:
+  pin:
+    number: GPIO13
+
+switch:
+  - <<: !include common/switch/restart.config.yaml
+
+  - platform: gpio
+    name: activity_indicator
+    pin:
+      number: GPIO13
+    id: activity_indicator
+    internal: true
+
+sensor:
+  - <<: !include common/sensor/uptime.config.yaml
+  - <<: !include common/sensor/wifi_signal.config.yaml
+  - <<: !include common/sensor/bme280.config.yaml
+  - <<: !include common/sensor/adc_illuminance.yaml
+
+binary_sensor:
+  - <<: !include common/binary_sensor/connection_status.config.yaml
+
+  - platform: gpio
+    pin: D5
+    name: "${friendly_name} Motion"
+    device_class: motion
+
+    filters:
+      delayed_off: 10s
+
+    on_state:
+      then:
+        - switch.turn_on: activity_indicator
+        - delay: 500ms
+        - switch.turn_off: activity_indicator
+        - delay: 500ms
+#####
+
+# <<: !include common/common.yaml
+
+# substitutions:
+#   node_name: multisensor-unit1-bedroom
+#   device_verbose_name: Unit 1 Livingroom
+#   update_interval: 30s
+#   # manual_ip:
+#   #   static_ip: 192.168.30.20
+#   #   gateway: 192.168.107.1
+#   #   subnet: 255.255.255.0
+
+# esphome:
+#   name: $node_name
+#   platform: ESP8266
+#   board: nodemcuv2
+
+# i2c:
+#   sda: GPIO4
+#   scl: GPIO5
+
+# # Enable logging
+# logger:
+
+# status_led:
+#   pin: GPIO13
+
+# switch:
+#   - platform: gpio
+#     pin: GPIO12
+#     id: activity_indicator
+
+# sensor:
+#   - !include common/sensor/uptime.config.yaml
+#   - !include common/sensor/wifi_signal.config.yaml
+#   - !include common/sensor/adc_illuminance.yaml
+#   - !include common/sensor/bme280.config.yaml
+#   - !include common/sensor/dewpoint.yaml
+
+# binary_sensor:
+#   - !include common/binary_sensor/connection_status.config.yaml
+
+#   - platform: gpio
+#     pin: GPIO14
+#     name: "${device_verbose_name} Motion"
+#     device_class: motion
+#     on_state:
+#       then:
+#         - switch.turn_on: activity_indicator
+#         - delay: 500ms
+#         - switch.turn_off: activity_indicator
+#         - delay: 500ms

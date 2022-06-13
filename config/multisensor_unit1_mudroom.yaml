@@ -1,7 +1,7 @@
 <<: !include common/common.yaml
 
 substitutions:
-  name: multisensor_unit1_mudroom
+  name: multisensor-unit1-mudroom
   friendly_name: Unit 1 Mudroom
   update_interval: 1min
   ip: 192.168.30.30
@@ -15,7 +15,6 @@ i2c:
   sda: GPIO4
   scl: GPIO5
 
-# Enable logging
 logger:
 
 sensor:

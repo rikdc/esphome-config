@@ -1,0 +1,35 @@
+<<: !include common/common.yaml
+
+substitutions:
+  name: basement
+  friendly_name: Basement
+  device_verbose_name: Basement
+  ip: 192.168.30.18
+
+esphome:
+  name: $name
+  platform: ESP32
+  board: esp-wrover-kit
+# Example configuration entry
+
+debug:
+
+mdns:
+  disabled: true
+
+i2c:
+  sda: 21
+  scl: 22
+  scan: True
+
+# Enable logging
+logger:
+  level: debug
+
+sensor:
+  - !include common/sensor/adc_illuminance.yaml
+  - !include common/sensor/bme280.config.yaml
+  - !include common/sensor/dewpoint.yaml
+
+switch:
+  - !include common/switch/restart.config.yaml

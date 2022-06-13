@@ -1,11 +1,11 @@
 <<: !include common/common.yaml
 
 substitutions:
-  name: unit1_socket_livingroom_couch
-  friendly_name: Unit2 Socket Livingroom Couch
+  name: outlet-livingroom-fireplace
+  friendly_name: Unit2 Socket Livingroom Fireplace
   icon: "mdi:chart-multiline"
   update_interval: 5min
-  ip: 192.168.30.22
+  ip: 192.168.30.27
     
 logger:
 

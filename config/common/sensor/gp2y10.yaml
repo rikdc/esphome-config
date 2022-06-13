@@ -1,0 +1,24 @@
+---
+platform: custom
+lambda: |-
+  auto dust_Sensor = new My_dust_Sensor(); 
+  App.register_component(dust_Sensor);
+  return {dust_Sensor->dust_density_sensor, dust_Sensor->dust_ppm, dust_Sensor->dust_density_sensor};
+
+sensors:
+  - name: "Particulate Matter <2.5µm Concentration"
+    accuracy_decimals: 2
+    id: monitor_pm2_5_standard
+    unit_of_measurement: "µg/m³"
+
+  - name: "Particulate Matter <2.5µm 24h average"
+    accuracy_decimals: 2
+    unit_of_measurement: "µg/m³"
+    id: pm2_5_avg_24h
+    filters:
+      - sliding_window_moving_average:
+          window_size: 1440
+          send_every: 1
+    on_value:
+      then:
+        - script.execute: update_aqi

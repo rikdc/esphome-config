@@ -12,7 +12,7 @@ esphome:
   board: nodemcuv2
   # on_boot:
   #   - lambda: |-
-  #       id(my_ota).set_auth_password("lemonface");
+  #       id(my_ota).set_auth_password("password");
 
 i2c:
   sda: D2
@@ -35,26 +35,17 @@ switch:
     pin: D3
     id: activity_indicator
 
-  # - platform: template
-  #   id: switch_option_disable_motion
-  #   name: "${device_verbose_name} Disable Motion Indictor"
-  #   on_...:
-  #     - globals.set:
-  #         id: my_global_var
-  #         value: '10'
-
 sensor:
-  - platform: bh1750
-    name: "${friendly_name} Illuminance"
-    address: 0x23
-    measurement_time: 69
-    update_interval: 60s
-
   -  !include common/sensor/uptime.config.yaml
   -  !include common/sensor/wifi_signal.config.yaml
-  -  !include common/sensor/bme280.config.yaml
-  -  !include common/sensor/dewpoint.yaml
-
+  #-  !include common/sensor/dewpoint.yaml
+  - platform: dht
+    pin: D7
+    temperature:
+      name: "Multisensor Temperature"
+    humidity:
+      name: "Multisensor Humidity"
+      
 binary_sensor:
   - platform: gpio
     pin: D6

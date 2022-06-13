@@ -12,4 +12,6 @@ wifi:
     ssid: "ESPHome-Fallback"
     password: !secret wifi_fallback_password
 
+#mdns:
+
 captive_portal:

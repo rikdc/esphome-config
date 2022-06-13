@@ -43,17 +43,16 @@ binary_sensor:
     id: button
     on_press:
       then:
-      - switch.toggle: relay
+        - switch.toggle: relay
     on_multi_click:
-    - timing:
-        - OFF for at least 10s
-      then:
-        - switch.turn_on: restart_switch
+      - timing:
+          - OFF for at least 10s
+        then:
+          - switch.turn_on: restart_switch
 
   - platform: gpio
     pin:
       number: GPIO15
-      mode: INPUT_PULLDOWN_16
     id: dummy_relay
     internal: True
 
@@ -66,7 +65,7 @@ binary_sensor:
     name: "Dumb Switch Output"
     internal: True
     on_press:
-      - switch.toggle: ${name}
+      - switch.toggle: ${id}
     on_state:
       lambda: !lambda |-
         if (x) {
@@ -83,26 +82,22 @@ switch:
     id: relay
     restore_mode: RESTORE_DEFAULT_OFF
     internal: True
-  
+
   - platform: template
     name: ${friendly_name}
-    id: ${name}
+    id: ${id}
     icon: ${icon}
     lambda: |-
-      if (id(power_button).state) {
-        return true;
-      } else {
-        return false;
-      }
+      return (id(power_button).state);
     turn_on_action:
-    - if:
-        condition:
-          - binary_sensor.is_off: power_button
-        then:
-          - switch.toggle: relay
+      - if:
+          condition:
+            - binary_sensor.is_off: power_button
+          then:
+            - switch.toggle: relay
     turn_off_action:
-    - if:
-        condition:
-          - binary_sensor.is_on: power_button
-        then:
-          - switch.toggle: relay
+      - if:
+          condition:
+            - binary_sensor.is_on: power_button
+          then:
+            - switch.toggle: relay
