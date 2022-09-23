@@ -1,0 +1,236 @@
+esphome:
+  name: aqi2
+  platform: ESP8266
+  board: nodemcuv2
+  includes:
+    - common/lib/GP2YDustSensor.h
+    - common/lib/sharp_sensor.h
+  # The sensor starts in an uncalibrated state after boot
+  on_boot:
+    priority: 500
+    then:
+      - binary_sensor.template.publish:
+          id: co2_calibrated
+          state: OFF
+
+substitutions:
+  name: aqi_sensor_dev
+  friendly_name: AQI Sensor Dev Board
+
+  led_pin_red: D7
+  led_pin_green: D8
+  led_pin_blue: TX
+
+  # These are the AQI threshold values and messages. Adapt to your needs.
+  aqi_co2_max_good: "800"
+  aqi_co2_max_acceptable: "1200"
+  aqi_pm2_5_avg_24h_max_good: "12"
+  aqi_pm2_5_avg_24h_max_acceptable: "25" # WHO 2006
+  aqi_pm10_avg_24h_max_good: "25"
+  aqi_pm10_avg_24h_max_acceptable: "50" # WHO 2006
+  aqi_message_bad: "Bad"
+  aqi_message_acceptable: "Acceptable"
+  aqi_message_good: "Good"
+
+wifi:
+  ssid: "SealoonIoT"
+  password: "Toas7er981!"
+
+  manual_ip:
+    static_ip: 192.168.107.50
+    gateway: 192.168.107.1
+    subnet: 255.255.255.0
+
+# Enable logging
+logger:
+  level: DEBUG
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+i2c:
+  sda: GPIO4
+  scl: GPIO5
+
+output:
+  - platform: esp8266_pwm
+    id: led_red
+    pin: ${led_pin_red}
+    max_power: 1
+  - platform: esp8266_pwm
+    id: led_green
+    pin: ${led_pin_green}
+    max_power: 0.011 # = 0.2^2.8
+  - platform: esp8266_pwm
+    id: led_blue
+    pin: ${led_pin_blue}
+    max_power: 0.722 # = 0.89^2.8
+
+light:
+  - platform: rgb
+    id: led_rgb
+    red: led_red
+    green: led_green
+    blue: led_blue
+
+bme680_bsec:
+  address: 0x77
+
+# Show the user whether the sensor has been calibrated yet
+binary_sensor:
+  - platform: template
+    name: "${name} CO₂ sensor calibrated"
+    id: co2_calibrated
+    on_press:
+      then:
+        - light.turn_off:
+            id: led_rgb
+    on_release:
+      then:
+        - light.turn_on:
+            id: led_rgb
+            brightness: 100%
+            red: 0%
+            green: 0%
+            blue: 100%
+
+sensor:
+  - platform: ccs811
+    eco2:
+      name: "CCS811 eCO2 Value"
+      id: ec02_value
+    tvoc:
+      name: "CCS811 Total Volatile Organic Compound"
+      id: tvoc_value
+    address: 0x5A
+    update_interval: 60s
+    temperature: bme680_temperature
+    humidity: bme680_humidity
+    baseline: 0x2CC6
+
+  - platform: bme680_bsec
+    temperature:
+      name: "BME680 Temperature"
+      id: bme680_temperature
+    pressure:
+      name: "BME680 Pressure"
+      id: bme680_pressure
+    humidity:
+      name: "BME680 Humidity"
+      id: bme680_humidity
+    iaq:
+      name: "BME680 IAQ"
+      filters:
+        - median
+    iaq_accuracy:
+      name: "IAQ Accuracy"
+      id: iaq_accuracy
+    co2_equivalent:
+      name: "BME680 CO2 Equivalent"
+    breath_voc_equivalent:
+      name:
+        "BME680 Breath VOC Equivalent"
+
+        # - light.turn_on:
+        #     id: led_rgb
+        #     red: 0%
+        #     green: 100%
+        #     blue: 0%
+
+  - platform: custom
+    lambda: |-
+      auto dust_Sensor = new My_dust_Sensor(); 
+      App.register_component(dust_Sensor);
+      return {dust_Sensor->dust_density_sensor, dust_Sensor->dust_density_sensor_running_average, dust_Sensor->dust_density_sensor};
+
+    sensors:
+      - name: "Particulate Matter <2.5µm Concentration"
+        accuracy_decimals: 2
+        id: monitor_pm2_5_standard
+        unit_of_measurement: "µg/m³"
+
+      - name: "Particulate Matter <2.5µm 24h average"
+        accuracy_decimals: 2
+        unit_of_measurement: "µg/m³"
+        id: pm2_5_avg_24h
+        filters:
+          - sliding_window_moving_average:
+              window_size: 1440
+              send_every: 1
+        on_value:
+          then:
+            - script.execute: update_aqi
+
+text_sensor:
+  - platform: template
+    name: "Air Quality Index"
+    id: aqi
+    icon: mdi:air-filter
+
+script:
+  - id: update_aqi
+    mode: restart
+    then:
+      # Bad if at least one of the sensor values is bad
+      - if:
+          condition:
+            or:
+              - sensor.in_range:
+                  id: ec02_value
+                  above: ${aqi_co2_max_acceptable}
+              - sensor.in_range:
+                  id: pm2_5_avg_24h
+                  above: ${aqi_pm2_5_avg_24h_max_acceptable}
+          then:
+            - text_sensor.template.publish:
+                id: aqi
+                state: ${aqi_message_bad}
+            # - if:
+            #     condition:
+            #       binary_sensor.is_on: co2_calibrated
+            #    then:
+            - light.turn_on:
+                id: led_rgb
+                red: 100%
+                green: 0%
+                blue: 0%
+          else:
+            # Acceptable if at least one of the sensor values is acceptable
+            - if:
+                condition:
+                  or:
+                    - sensor.in_range:
+                        id: ec02_value
+                        above: ${aqi_co2_max_good}
+                    - sensor.in_range:
+                        id: pm2_5_avg_24h
+                        above: ${aqi_pm2_5_avg_24h_max_good}
+                then:
+                  - text_sensor.template.publish:
+                      id: aqi
+                      state: ${aqi_message_acceptable}
+                  - if:
+                      condition:
+                        binary_sensor.is_on: co2_calibrated
+                      then:
+                        - light.turn_on:
+                            id: led_rgb
+                            red: 100%
+                            green: 100%
+                            blue: 0%
+                else:
+                  # Otherwise good (all of the sensor values are good)
+                  - text_sensor.template.publish:
+                      id: aqi
+                      state: ${aqi_message_good}
+                  - if:
+                      condition:
+                        binary_sensor.is_on: co2_calibrated
+                      then:
+                        - light.turn_on:
+                            id: led_rgb
+                            red: 0%
+                            green: 100%
+                            blue: 0%
